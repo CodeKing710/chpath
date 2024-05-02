@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# chpath's installer
+install() {
+  local repo=$(find $HOME -type d -name chpath)
+  cp $repo/chpath $HOME/bin || return false
+  cp -r $repo/.chpath $HOME || return false
+  echo "chpath installed!"
+}
+
+install || echo "Install failed!"
