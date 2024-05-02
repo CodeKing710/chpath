@@ -1,44 +1,127 @@
 #!/bin/bash
 
 version="chpath - v1.0.0"
-help=""
+help=`cat <<-HELP
+Usage: chpath <list|add|remove|edit> [paths ...]
+
+Options:
+    All options except list will require a reload of the terminal environment. This can be done by the alias 'reload' that the program writes to the bashrc file, or you can run \\\`source ~/.bashrc\\\` to reload the terminal
+
+    list      Lists current paths in a readable format
+
+    add       Adds path(s) to the current path structure (requires reload)
+
+    remove    Removes path(s) from the current path structure (requires reload)
+
+    edit      Edit path(s) in the current path structure (requires reload)
+
+    reset     Resets the current path structure to the original path
+
+    save      Saves the current path structure as the original
+HELP
+`
 
 # chpath's Functions and Variables
 
 # Vars
 __cwd=`pwd`
 prgroot="$HOME/.chpath"
+__tmppre=`echo -e "${PATH//:/\\n}"`
 
 # Funcs
 __args() {
   # Process args
-  while [[ "$1" =~ '-' ]]; do
-    # ALL CASE STATEMENT OPTIONS SHOULD END WITH 'exit;;' in this function!!
+  while [[ -n "$1" ]]; do
+    # ALL CASE STATEMENT OPTIONS SHOULD END WITH 'return;;' in this function!!
     case "$1" in
-      -h | --help )
-        cat $prgroot/help
-        exit;;
-      -v | --version )
-        cat $prgroot/version
-        exit;;
+      list )
+        __list
+        return;;
+      add )
+        argcheck $1 && __add $@
+        return;;
+      remove )
+        argcheck $1 && __remove $@
+        return;;
+      edit )
+        argcheck $1 && __edit $@
+        return;;
+      reset )
+        __reset
+        return;;
+      save )
+        __save
+        return;;
+      help )
+        echo "$help"
+        return;;
+      version )
+        echo "$version"
+        return;;
+      -V | --verbose )
+        DEV=true
+        ;;
       * ) # Catch-all
-        cat $prgroot/help | head -1
+        echo "$help" | head -1
         echo "\"$1\" is not an argument!"
-        exit;;
+        return;;
     esac
   shift; done
 }
+
+argcheck() { [ -z "$1" ] && return false || return true; }
+__list() { echo -e "${PATH//:/\\n}"; }
+__add() {
+  __chg=true
+  while [[ -n "$1" ]]; do
+    case "$1" in
+      -b | --before )
+        shift;
+        __tmppre="${1}:$__tmppre"
+        ;;
+      -a | --after )
+        ;;
+      * )
+        ;;
+    esac
+  shift; done
+}
+# __remove() {}
+# __edit() {}
+__reset() { cat $HOME/.pathog > $HOME/.path; }
+__save() { cat $HOME/.path > $HOME/.pathog; }
+
 # chpath's main code
 
 repo=`find $HOME -type d -name chpath`
 
+[[ `diff $repo/chpath $HOME/bin/chpath` ]] && $repo/install
+
 __chpath() {
-  [ -z "" ] && args -h || __args $@
-  # Write your app's main flow here (General stub supports arg handling)
+  # Save users original path
+  if [ ! -e "$HOME/.pathog" ]; then
+    [ $DEV ] && echo "Creating .pathog"
+    echo "+" > $HOME/.pathog
+  fi
+
+  # Set .path file if it doesn't exist
+  if [ ! -e "$HOME/.path" ]; then
+    [ $DEV ] && echo "Creating .path"
+    echo "+" > $HOME/.path
+  fi
+
+  # Run args
+  [ -z "$1" ] && __args -h || __args $@
+
+  # Arg will set state of __chg to true to update the path file only when needed
+  [ $__chg ] && echo -e "${__tmp//\\n/:}" > $HOME/.path
+
+  # This will work with the program being force sourced
+  source $HOME/.bashrc
 }
 
 __chpath $@
 
 # Cleanup for accidental sourcing
-unset __chpath __args __cwd repo
+unset __chpath __args __cwd repo __tmp DEV
 unset version help

@@ -4,7 +4,15 @@
 install() {
   local repo=$(find $HOME -type d -name chpath)
   cp $repo/chpath $HOME/bin || return false
-  cp -r $repo/.chpath $HOME || return false
+  [[ ! `cat $HOME/.bashrc` =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> $HOME/.bashrc
+  # RC Check
+  local rc=`cat <<-RC
+# CHPATH
+alias chpath="source chpath"
+export PATH="\\\$(cat ~/.path | cut -d '+' -f1)\\\$ORIGINAL_PATH\\\$(cat ~/.path | cut -d '+' -f2)"
+RC
+`
+  [[ ! `cat $HOME/.bashrc` =~ "# CHPATH" ]] && echo "$rc" >> $HOME/.bashrc
   echo "chpath installed!"
 }
 
