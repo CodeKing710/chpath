@@ -25,8 +25,11 @@ HELP
 
 # Vars
 __cwd=`pwd`
+__tmppre=`cat "$HOME/.path" | cut -d '+' -f1`
+__tmppost=`cat "$HOME/.path" | cut -d '+' -f2`
 prgroot="$HOME/.chpath"
-__tmppre=`echo -e "${PATH//:/\\n}"`
+changed=''
+DEV=''
 
 # Funcs
 __args() {
@@ -38,13 +41,31 @@ __args() {
         __list
         return;;
       add )
-        argcheck $1 && __add $@
+        shift
+        [[ $DEV ]] && echo "Args passed to __add(): $@"
+        if [[ ! -z "$1" ]]; then
+          __add $@
+        else
+          echo "Required argument: PATH"
+        fi
         return;;
       remove )
-        argcheck $1 && __remove $@
+        shift
+        [[ $DEV ]] && echo "Args passed to __remove(): $@"
+        if [[ ! -z "$1" ]]; then
+          __remove $@
+        else
+          echo "Required argument: PATH"
+        fi
         return;;
       edit )
-        argcheck $1 && __edit $@
+        shift
+        [[ $DEV ]] && echo "Args passed to __edit(): $@"
+        if [[ ! -z "$1" ]]; then
+          __edit $@
+        else
+          echo "Required argument: PATH"
+        fi
         return;;
       reset )
         __reset
@@ -60,6 +81,7 @@ __args() {
         return;;
       -V | --verbose )
         DEV=true
+        [[ $DEV ]] && echo " - Verbose output - "
         ;;
       * ) # Catch-all
         echo "$help" | head -1
@@ -69,10 +91,10 @@ __args() {
   shift; done
 }
 
-argcheck() { [ -z "$1" ] && return false || return true; }
+# argcheck() { [[ "$1" ]] && return 1 || return; }
 __list() { echo -e "${PATH//:/\\n}"; }
 __add() {
-  __chg=true
+  changed=true
   while [[ -n "$1" ]]; do
     case "$1" in
       -b | --before )
@@ -80,16 +102,35 @@ __add() {
         __tmppre="${1}:$__tmppre"
         ;;
       -a | --after )
+        shift;
+        __tmppost="${__tmppost}:${1}"
         ;;
       * )
+        __tmppost="${__tmppost}:${1}"
         ;;
     esac
   shift; done
+  [[ $DEV ]] && echo "Path file update: ${__tmppre}+${__tmppost}"
 }
-# __remove() {}
-# __edit() {}
-__reset() { cat $HOME/.pathog > $HOME/.path; }
-__save() { cat $HOME/.path > $HOME/.pathog; }
+__remove() {
+  while [[ -n "$1" ]]; do
+    
+  shift; done
+}
+__edit() {
+  while [[ -n "$1" ]]; do
+    local og=`echo "$1" | cut -d '=' -f1`
+    local nu=`echo "$1" | cut -d '=' -f2`
+    
+    [[ $DEV ]] && echo "Editing $og to $nu"
+
+    sed -i "s;$og;$nu;" "$HOME/.path" && changed=true || echo "Failed to edit $og to $nu!"
+
+  shift; done
+  [[ $DEV ]] && echo "Updated path file: `cat $HOME/.path`"
+}
+__reset() { cat $HOME/.pathog > "$HOME/.path" && echo "Path reset!"; }
+__save() { cat $HOME/.path > "$HOME/.pathog" && echo "Path saved!"; }
 
 # chpath's main code
 
@@ -98,26 +139,28 @@ repo=`find $HOME -type d -name chpath`
 [[ `diff $repo/chpath $HOME/bin/chpath` ]] && $repo/install
 
 __chpath() {
+  # Run args
+  [ -z "$1" ] && __args help || __args $@
+
   # Save users original path
   if [ ! -e "$HOME/.pathog" ]; then
-    [ $DEV ] && echo "Creating .pathog"
-    echo "+" > $HOME/.pathog
+    [[ $DEV ]] && echo "Creating .pathog"
+    echo "+" > "$HOME/.pathog"
   fi
 
   # Set .path file if it doesn't exist
   if [ ! -e "$HOME/.path" ]; then
-    [ $DEV ] && echo "Creating .path"
-    echo "+" > $HOME/.path
+    [[ $DEV ]] && echo "Creating .path"
+    echo "+" > "$HOME/.path"
   fi
 
-  # Run args
-  [ -z "$1" ] && __args -h || __args $@
-
   # Arg will set state of __chg to true to update the path file only when needed
-  [ $__chg ] && echo -e "${__tmp//\\n/:}" > $HOME/.path
+  if [[ $changed ]]; then
+    echo -e "${__tmppre}+${__tmppost}" > "$HOME/.path" && [[ $DEV ]] && echo "Path file written"
+  fi
 
   # This will work with the program being force sourced
-  source $HOME/.bashrc
+  source "$HOME/.bashrc"
 }
 
 __chpath $@
