@@ -86,6 +86,9 @@ __args() {
         DEV=true
         [[ $DEV ]] && echo " - Verbose output - "
         ;;
+      --usage )
+        echo "$help" | head -1
+        return;;
       * ) # Catch-all
         echo "$help" | head -1
         echo "\"$1\" is not an argument!"
@@ -168,7 +171,7 @@ repo=`find $HOME -type d -name chpath`
 
 __chpath() {
   # Run args
-  [ -z "$1" ] && __args help || __args $@
+  [ -z "$1" ] && __args --usage || __args $@
 
   # Save users original path
   if [ ! -e "$HOME/.pathog" ]; then
