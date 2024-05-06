@@ -14,6 +14,9 @@ Options:
     remove    Removes path(s) from the current path structure (requires reload)
 
     edit      Edit path(s) in the current path structure (requires reload)
+              Every other argument starting from the first argument indicates a path to change
+              Following argument indicates what the path is being changed to
+              (It is a sed so weird pattern issue may occur)
 
     reset     Resets the current path structure to the original path
 
@@ -91,8 +94,9 @@ __args() {
   shift; done
 }
 
-# argcheck() { [[ "$1" ]] && return 1 || return; }
 __list() { echo -e "${PATH//:/\\n}"; }
+__reset() { cat $HOME/.pathog > "$HOME/.path" && echo "Path reset!"; }
+__save() { cat $HOME/.path > "$HOME/.pathog" && echo "Path saved!"; }
 __add() {
   changed=true
   while [[ -n "$1" ]]; do
@@ -113,24 +117,48 @@ __add() {
   [[ $DEV ]] && echo "Path file update: ${__tmppre}+${__tmppost}"
 }
 __remove() {
+  changed=true
   while [[ -n "$1" ]]; do
-    
+    if [[ $__tmppre =~ "$1" ]]; then
+      __tmppre="${__tmppre//$1/}" && changed=true
+      [[ $DEV ]] && echo "Prepath list: Removed '$1' - $__tmppre"
+    elif [[ $__tmppost =~ "$1" ]]; then
+      __tmppost="${__tmppost//$1/}" && changed=true
+      [[ $DEV ]] && echo "Postpath list: Removed '$1' - $__tmppost"
+    else
+      echo "Failed to remove ${1}! Path doesn't exist in list!"
+    fi
+    # Catch special empty case
+    if [[ $__tmppre == ":" ]]; then
+      [[ $DEV ]] && echo "Empty Prepath list"
+      __tmppre="${__tmppre//:/}"
+    fi
+    if [[ $__tmppost == ":" ]]; then
+      [[ $DEV ]] && echo "Empty Postpath list"
+      __tmppost="${__tmppost//:/}"
+    fi
   shift; done
 }
 __edit() {
   while [[ -n "$1" ]]; do
-    local og=`echo "$1" | cut -d '=' -f1`
-    local nu=`echo "$1" | cut -d '=' -f2`
+    local og="$1"; shift
+    local nu="$1"
     
     [[ $DEV ]] && echo "Editing $og to $nu"
 
-    sed -i "s;$og;$nu;" "$HOME/.path" && changed=true || echo "Failed to edit $og to $nu!"
-
+    # sed -i "s;$og;$nu;" "$HOME/.path" && changed=true || echo "Failed to edit $og to $nu!"
+    if [[ $__tmppre =~ "$og" ]]; then
+      __tmppre="${__tmppre//$og/$nu}" && changed=true
+      [[ $DEV ]] && echo "Prepath list: '$og' is now '$nu' - $__tmppre"
+    elif [[ $__tmppost =~ "$og" ]]; then
+      __tmppost="${__tmppost//$og/$nu}" && changed=true
+      [[ $DEV ]] && echo "Postpath list: '$og' is now '$nu' - $__tmppost"
+    else
+      echo "Failed to edit $og to $nu! Path doesn't exist in list!"
+    fi
   shift; done
   [[ $DEV ]] && echo "Updated path file: `cat $HOME/.path`"
 }
-__reset() { cat $HOME/.pathog > "$HOME/.path" && echo "Path reset!"; }
-__save() { cat $HOME/.path > "$HOME/.pathog" && echo "Path saved!"; }
 
 # chpath's main code
 
