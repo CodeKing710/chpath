@@ -27,10 +27,9 @@ HELP
 # chpath's Functions and Variables
 
 # Vars
-__cwd=`pwd`
-__tmppre=`cat "$HOME/.path" | cut -d '+' -f1`
-__tmppost=`cat "$HOME/.path" | cut -d '+' -f2`
-prgroot="$HOME/.chpath"
+__cwd=$(pwd)
+__tmppre=$(cat "$HOME/.path" | cut -d '+' -f1)
+__tmppost=$(cat "$HOME/.path" | cut -d '+' -f2)
 changed=''
 DEV=''
 
@@ -167,7 +166,11 @@ __edit() {
 
 repo=`find $HOME -type d -name chpath`
 
-[[ `diff $repo/chpath $HOME/bin/chpath` ]] && $repo/install
+if [[ $EUID -ne 0 ]]; then
+  [[ `diff $repo/chpath $HOME/bin/chpath` ]] && $repo/install
+else
+  [[ `diff $repo/chpath /usr/local/bin/chpath` ]] && $repo/install --sys
+fi
 
 __chpath() {
   # Run args
