@@ -3,18 +3,18 @@
 # chpath's installer
 install() {
   [[ "$1" == "--sys" ]] && local bin="/usr/local/bin" || local bin="$HOME"
-  local repo=$(find "$HOME" -type d -name chpath)
-  cp "$repo"/chpath "$bin"/bin || return false
-  [[ ! $(cat $HOME/.bashrc) =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc
+  local repo="$(find "$HOME" -type d -name chpath 2>/dev/null | head -1)"
+  cp "$repo"/chpath "$bin"/bin || return 1
+  [[ ! $(cat "$HOME"/.bashrc) =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc
   # RC Check
   local rc=`cat <<-RC
 # CHPATH
 alias chpath="source chpath"
-export PATH="\\\$(cat ~/.path | cut -d '+' -f1)\\\$ORIGINAL_PATH\\\$(cat ~/.path | cut -d '+' -f2)"
+export PATH="\\\$(cat "\\\$HOME/.path" | cut -d '+' -f1)\\\$ORIGINAL_PATH\\\$(cat "\\\$HOME/.path" | cut -d '+' -f2)"
 RC
 `
-  [[ ! $(cat $HOME/.bashrc) =~ "# CHPATH" ]] && echo "$rc" >> "$HOME"/.bashrc
+  [[ ! $(cat "$HOME"/.bashrc) =~ "# CHPATH" ]] && echo "$rc" >> "$HOME"/.bashrc
   echo "chpath installed!"
 }
 
-install || echo "Install failed!"
+install

@@ -27,9 +27,9 @@ HELP
 # chpath's Functions and Variables
 
 # Vars
-__cwd=$(pwd)
-__tmppre=$(cat "$HOME/.path" | cut -d '+' -f1)
-__tmppost=$(cat "$HOME/.path" | cut -d '+' -f2)
+__cwd="$(pwd)"
+__tmppre="$(cat "$HOME/.path" | cut -d '+' -f1)"
+__tmppost="$(cat "$HOME/.path" | cut -d '+' -f2)"
 changed=''
 DEV=''
 
@@ -44,27 +44,27 @@ __args() {
         return;;
       add )
         shift
-        [[ $DEV ]] && echo "Args passed to __add(): $@"
+        verbose "Args passed to __add(): $@"
         if [[ ! -z "$1" ]]; then
-          __add $@
+          __add "$@"
         else
           echo "Required argument: PATH"
         fi
         return;;
       remove )
         shift
-        [[ $DEV ]] && echo "Args passed to __remove(): $@"
+        verbose "Args passed to __remove(): $@"
         if [[ ! -z "$1" ]]; then
-          __remove $@
+          __remove "$@"
         else
           echo "Required argument: PATH"
         fi
         return;;
       edit )
         shift
-        [[ $DEV ]] && echo "Args passed to __edit(): $@"
+        verbose "Args passed to __edit(): $@"
         if [[ ! -z "$1" ]]; then
-          __edit $@
+          __edit "$@"
         else
           echo "Required argument: PATH"
         fi
@@ -83,22 +83,25 @@ __args() {
         return;;
       -V | --verbose )
         DEV=true
-        [[ $DEV ]] && echo " - Verbose output - "
+        verbose " - Verbose output - "
         ;;
       --usage )
         echo "$help" | head -1
         return;;
       * ) # Catch-all
         echo "$help" | head -1
-        echo "\"$1\" is not an argument!"
+        error "\"$1\" is not an argument!"
         return;;
     esac
   shift; done
 }
 
+error() { echo -e '\e[0;1;31m[ERROR]\e[0;0;0m '"${1}" >&2; }
+verbose() { [[ -n "$DEV" ]] && echo -e '\e[0;1;95m[VERBOSE]\e[0;0;0m '"${1}"; }
+log() { echo -e '\e[0;1;36m[VEM]\e[0;0;0m '"${1}"; }
 __list() { echo -e "${PATH//:/\\n}"; }
-__reset() { cat $HOME/.pathog > "$HOME/.path" && echo "Path reset!"; }
-__save() { cat $HOME/.path > "$HOME/.pathog" && echo "Path saved!"; }
+__reset() { cat "$HOME"/.pathog > "$HOME/.path" && log "Path reset!"; }
+__save() { cat "$HOME"/.path > "$HOME/.pathog" && log "Path saved!"; }
 __add() {
   changed=true
   while [[ -n "$1" ]]; do
@@ -116,27 +119,27 @@ __add() {
         ;;
     esac
   shift; done
-  [[ $DEV ]] && echo "Path file update: ${__tmppre}+${__tmppost}"
+  verbose "Path file update: ${__tmppre}+${__tmppost}"
 }
 __remove() {
   changed=true
   while [[ -n "$1" ]]; do
-    if [[ $__tmppre =~ "$1" ]]; then
+    if [[ "$__tmppre" =~ "$1" ]]; then
       __tmppre="${__tmppre//$1/}" && changed=true
-      [[ $DEV ]] && echo "Prepath list: Removed '$1' - $__tmppre"
-    elif [[ $__tmppost =~ "$1" ]]; then
+      verbose "Prepath list: Removed '$1' - $__tmppre"
+    elif [[ "$__tmppost" =~ "$1" ]]; then
       __tmppost="${__tmppost//$1/}" && changed=true
-      [[ $DEV ]] && echo "Postpath list: Removed '$1' - $__tmppost"
+      verbose "Postpath list: Removed '$1' - $__tmppost"
     else
-      echo "Failed to remove ${1}! Path doesn't exist in list!"
+      error "Failed to remove ${1}! Path doesn't exist in list!"
     fi
     # Catch special empty case
-    if [[ $__tmppre == ":" ]]; then
-      [[ $DEV ]] && echo "Empty Prepath list"
+    if [[ "$__tmppre" == ":" ]]; then
+      verbose "Empty Prepath list"
       __tmppre="${__tmppre//:/}"
     fi
-    if [[ $__tmppost == ":" ]]; then
-      [[ $DEV ]] && echo "Empty Postpath list"
+    if [[ "$__tmppost" == ":" ]]; then
+      verbose "Empty Postpath list"
       __tmppost="${__tmppost//:/}"
     fi
   shift; done
@@ -146,58 +149,58 @@ __edit() {
     local og="$1"; shift
     local nu="$1"
     
-    [[ $DEV ]] && echo "Editing $og to $nu"
+    verbose "Editing $og to $nu"
 
     # sed -i "s;$og;$nu;" "$HOME/.path" && changed=true || echo "Failed to edit $og to $nu!"
     if [[ $__tmppre =~ "$og" ]]; then
       __tmppre="${__tmppre//$og/$nu}" && changed=true
-      [[ $DEV ]] && echo "Prepath list: '$og' is now '$nu' - $__tmppre"
+      verbose "Prepath list: '$og' is now '$nu' - $__tmppre"
     elif [[ $__tmppost =~ "$og" ]]; then
       __tmppost="${__tmppost//$og/$nu}" && changed=true
-      [[ $DEV ]] && echo "Postpath list: '$og' is now '$nu' - $__tmppost"
+      verbose "Postpath list: '$og' is now '$nu' - $__tmppost"
     else
-      echo "Failed to edit $og to $nu! Path doesn't exist in list!"
+      error "Failed to edit $og to $nu! Path doesn't exist in list!"
     fi
   shift; done
-  [[ $DEV ]] && echo "Updated path file: `cat $HOME/.path`"
+  verbose "Updated path file: $(cat "$HOME/.path")"
 }
 
 # chpath's main code
 
-repo=`find $HOME -type d -name chpath`
+repo="$(find "$HOME" -type d -name chpath 2>/dev/null | head -1)"
 
 if [[ $EUID -ne 0 ]]; then
-  [[ `diff $repo/chpath $HOME/bin/chpath` ]] && $repo/install
+  [[ $(diff "$repo"/chpath "$HOME"/bin/chpath) ]] && "$repo/install"
 else
-  [[ `diff $repo/chpath /usr/local/bin/chpath` ]] && $repo/install --sys
+  [[ $(diff "$repo"/chpath /usr/local/bin/chpath) ]] && "$repo/install" --sys
 fi
 
 __chpath() {
   # Run args
-  [ -z "$1" ] && __args --usage || __args $@
+  [ -z "$1" ] && __args --usage || __args "$@"
 
   # Save users original path
   if [ ! -e "$HOME/.pathog" ]; then
-    [[ $DEV ]] && echo "Creating .pathog"
+    verbose "Creating .pathog"
     echo "+" > "$HOME/.pathog"
   fi
 
   # Set .path file if it doesn't exist
   if [ ! -e "$HOME/.path" ]; then
-    [[ $DEV ]] && echo "Creating .path"
+    verbose "Creating .path"
     echo "+" > "$HOME/.path"
   fi
 
   # Arg will set state of __chg to true to update the path file only when needed
-  if [[ $changed ]]; then
-    echo -e "${__tmppre}+${__tmppost}" > "$HOME/.path" && [[ $DEV ]] && echo "Path file written"
+  if [[ -n "$changed" ]]; then
+    echo -e "${__tmppre}+${__tmppost}" > "$HOME/.path" && verbose "Path file written"
   fi
 
   # This will work with the program being force sourced
   source "$HOME/.bashrc"
 }
 
-__chpath $@
+__chpath "$@"
 
 # Cleanup for accidental sourcing
 unset __chpath __args __cwd repo __tmp DEV
