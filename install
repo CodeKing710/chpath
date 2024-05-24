@@ -10,7 +10,8 @@ install() {
   local rc=`cat <<-RC
 # CHPATH
 alias chpath="source chpath"
-export PATH="\\\$(cat "\\\$HOME/.path" | cut -d '+' -f1)\\\$ORIGINAL_PATH\\\$(cat "\\\$HOME/.path" | cut -d '+' -f2)"
+export ORIGINAL_PATH="\\\$PATH"
+export PATH="\\\$(cat "\\\$HOME/.path" | cut -d '+' -f1)\\\${ORIGINAL_PATH}\\\$(cat "\\\$HOME/.path" | cut -d '+' -f2)"
 RC
 `
   [[ ! $(cat "$HOME"/.bashrc) =~ "# CHPATH" ]] && echo "$rc" >> "$HOME"/.bashrc
