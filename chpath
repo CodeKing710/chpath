@@ -98,7 +98,7 @@ __args() {
 
 error() { echo -e '\e[0;1;31m[ERROR]\e[0;0;0m '"${1}" >&2; }
 verbose() { [[ -n "$DEV" ]] && echo -e '\e[0;1;95m[VERBOSE]\e[0;0;0m '"${1}"; }
-log() { echo -e '\e[0;1;36m[VEM]\e[0;0;0m '"${1}"; }
+log() { echo -e '\e[0;1;36m[CHPATH]\e[0;0;0m '"${1}"; }
 __list() { echo -e "${PATH//:/\\n}"; }
 __reset() { cat "$HOME"/.pathog > "$HOME/.path" && log "Path reset!"; }
 __save() { cat "$HOME"/.path > "$HOME/.pathog" && log "Path saved!"; }
