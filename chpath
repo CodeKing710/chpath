@@ -169,7 +169,7 @@ __edit() {
 
 repo="$(find "$HOME" -type d -name chpath 2>/dev/null | head -1)"
 
-if [[ -z "$(find /usr/local/bin -type f -name chpath)" ]]; then
+if [[ -z "$([[ -e /usr/local/bin ]] && find /usr/local/bin -type f -name chpath)" ]]; then
   [[ $(diff "$repo"/chpath "$HOME"/bin/chpath) ]] && "$repo/install"
 else
   [[ $(diff "$repo"/chpath /usr/local/bin/chpath) ]] && "$repo/install" --sys
