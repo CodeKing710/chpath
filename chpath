@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="chpath - v1.0.0"
+version="chpath - v1.0.1"
 help=`cat <<-HELP
 Usage: chpath <list|add|remove|edit> [paths ...]
 

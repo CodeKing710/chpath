@@ -3,19 +3,17 @@
 # chpath's installer
 install() {
   local repo="$(find "$HOME" -type d -name chpath | grep repo)"
-  [[ "$1" == "--sys" ]] && { sudo cp -f "$repo/chpath" "/usr/local/bin" || return 1; } || {
-    cp "$repo"/chpath "$HOME/bin" || return 1
-    [[ ! "$(cat "$HOME"/.bashrc)" =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc
-    # RC Check
-    local rc="$(cat <<- RC
+  [[ "$1" == "--sys" ]] && { sudo cp -f "$repo/chpath" "/usr/local/bin" || return 1; } || { cp "$repo"/chpath "$HOME/bin" || return 1; }
+  [[ ! "$(cat "$HOME"/.bashrc)" =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc
+  # RC Check
+  local rc="$(cat <<- RC
       # CHPATH
       alias chpath="source chpath"
       export ORIGINAL_PATH="\$PATH"
       export PATH="\$(cat "\$HOME/.path" | cut -d '+' -f1)\${ORIGINAL_PATH}\$(cat "\$HOME/.path" | cut -d '+' -f2)"
 RC
-    )"
-    [[ ! "$(cat "$HOME"/.bashrc)" =~ "# CHPATH" ]] && echo "$rc" >> "$HOME"/.bashrc
-  }
+  )"
+  [[ ! "$(cat "$HOME"/.bashrc)" =~ "# CHPATH" ]] && echo "$rc" >> "$HOME"/.bashrc
 }
 
 install "$@"
