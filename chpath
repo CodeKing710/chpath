@@ -78,7 +78,7 @@ __args() {
       help )
         echo "$help"
         return;;
-      version )
+      version | --version )
         echo "$version"
         return;;
       -V | --verbose )
