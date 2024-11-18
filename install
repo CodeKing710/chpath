@@ -14,6 +14,8 @@ install() {
 RC
   )"
   [[ ! "$(cat "$HOME"/.bashrc)" =~ "# CHPATH" ]] && echo "$rc" >> "$HOME"/.bashrc
+  # Attempt to add completion to system, otherwise default to ~/.d/.c/
+  [[ "$1" == "--sys" ]] && { [[ -e "/etc/bash_completion.d/chpath-comp.sh" ]] || cp -f "$repo/chpath-comp" "/etc/bash_completion.d/chpath-comp.sh"; } || { [[ -e "$HOME/.d/chpath-comp" ]] || cp -f "$repo/chpath-comp" "$HOME/.d/chpath-comp"; }
 }
 
 install "$@"

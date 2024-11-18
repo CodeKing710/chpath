@@ -39,10 +39,10 @@ __args() {
   while [[ -n "$1" ]]; do
     # ALL CASE STATEMENT OPTIONS SHOULD END WITH 'return;;' in this function!!
     case "$1" in
-      list )
+      list | -l | --list )
         __list
         return;;
-      add )
+      add | -a | --add )
         shift
         verbose "Args passed to __add(): $@"
         if [[ ! -z "$1" ]]; then
@@ -51,7 +51,7 @@ __args() {
           echo "Required argument: PATH"
         fi
         return;;
-      remove )
+      remove | -r | --remove )
         shift
         verbose "Args passed to __remove(): $@"
         if [[ ! -z "$1" ]]; then
@@ -60,7 +60,7 @@ __args() {
           echo "Required argument: PATH"
         fi
         return;;
-      edit )
+      edit | -e | --edit )
         shift
         verbose "Args passed to __edit(): $@"
         if [[ ! -z "$1" ]]; then
@@ -69,19 +69,19 @@ __args() {
           echo "Required argument: PATH"
         fi
         return;;
-      reset )
+      reset | -R | --reset )
         __reset
         return;;
-      save )
+      save | -S | --save )
         __save
         return;;
-      help )
+      help | -\? | --help )
         echo "$help"
         return;;
-      version | --version )
+      version | -v | --version )
         echo "$version"
         return;;
-      -V | --verbose )
+      verbose | -V | --verbose )
         DEV=true
         verbose " - Verbose output - "
         ;;

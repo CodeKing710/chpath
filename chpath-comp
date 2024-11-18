@@ -1,0 +1,31 @@
+#!/bin/bash
+
+_chpath_completions() {
+  local cur prev ARGS CMDS
+  cur="${COMP_WORDS[COMP_CWORD]}"
+  prev="${COMP_WORDS[COMP_CWORD-1]}"
+  CMDS="list add remove edit reset save help version"
+  ARGS="-l --list -a --add -r --remove -e --edit -R --reset -S --save -? --help -v --version -V --verbose --usage"
+
+  if [[ "$cur" == -* ]]; then
+    COMPREPLY=( $(compgen -W "$ARGS" -- "$cur") )
+    return 0
+  fi
+
+  case "${prev}" in
+    chpath )
+      COMPREPLY=( $(compgen -W "$CMDS" -- "$cur") )
+      return 0;;
+    remove | edit )
+      COMPREPLY=( $(compgen -W "${PATH/:/ }" -- "$cur") )
+      return 0;;
+    add )
+      COMPREPLY=( $(compgen -W "$(ls -A | grep '/')" -- "$cur") )
+      return 0;;
+    * )
+      COMPREPLY=( $(compgen -W "$CMDS" -- "$cur") )
+      return 0;;
+  esac
+}
+
+complete -F _chpath_completions chpath
