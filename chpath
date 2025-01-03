@@ -28,8 +28,8 @@ HELP
 
 # Vars
 __cwd="$(pwd)"
-__tmppre="$(cat "$HOME/.path" | cut -d '+' -f1)"
-__tmppost="$(cat "$HOME/.path" | cut -d '+' -f2)"
+__tmppre="$(cat "$HOME/.path" 2>/dev/null | cut -d '+' -f1)"
+__tmppost="$(cat "$HOME/.path" 2>/dev/null | cut -d '+' -f2)"
 changed=''
 DEV=''
 

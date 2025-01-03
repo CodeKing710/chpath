@@ -2,7 +2,7 @@
 
 # chpath's installer
 install() {
-  local repo="$(find "$HOME" -type d -name chpath | grep repo)"
+  local repo="$(find "$HOME" -type d -name chpath 2>/dev/null | grep repo)"
   [[ "$1" == "--sys" ]] && { sudo cp -f "$repo/chpath" "/usr/local/bin" || return 1; } || { cp "$repo"/chpath "$HOME/bin" || return 1; }
   [[ ! "$(cat "$HOME"/.bashrc)" =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc
   # RC Check
