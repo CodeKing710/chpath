@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 version="chpath - v1.0.1"
 help=`cat <<-HELP
@@ -96,9 +96,9 @@ __args() {
   shift; done
 }
 
-error() { echo -e '\e[0;1;31m[ERROR]\e[0;0;0m '"${1}" >&2; }
-verbose() { [[ -n "$DEV" ]] && echo -e '\e[0;1;95m[VERBOSE]\e[0;0;0m '"${1}"; }
-log() { echo -e '\e[0;1;36m[CHPATH]\e[0;0;0m '"${1}"; }
+error() { printf '\e[0;1;31m[ERROR]\e[0;0;0m '"${1}\n" >&2; }
+verbose() { [[ -n "$DEV" ]] && printf '\e[0;1;95m[VERBOSE]\e[0;0;0m '"${1}\n"; }
+log() { printf '\e[0;1;36m[CHPATH]\e[0;0;0m '"${1}\n"; }
 __list() { echo -e "${PATH//:/\\n}"; }
 __reset() { cat "$HOME"/.pathog > "$HOME/.path" && log "Path reset!"; }
 __save() { cat "$HOME"/.path > "$HOME/.pathog" && log "Path saved!"; }
@@ -169,11 +169,7 @@ __edit() {
 
 repo="$(find "$HOME" -type d -name chpath 2>/dev/null | head -1)"
 
-if [[ -z "$([[ -e /usr/local/bin ]] && find /usr/local/bin -type f -name chpath)" ]]; then
-  [[ $(diff "$repo"/chpath "$HOME"/bin/chpath) ]] && "$repo/install"
-else
-  [[ $(diff "$repo"/chpath /usr/local/bin/chpath) ]] && "$repo/install" --sys
-fi
+[[ $(diff "$repo/chpath" "$HOME/bin/chpath") ]] && "$repo/install"
 
 __chpath() {
   # Run args

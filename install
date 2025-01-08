@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # chpath's installer
 install() {
@@ -7,10 +7,10 @@ install() {
   [[ ! "$(cat "$HOME"/.bashrc)" =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc
   # RC Check
   local rc="$(cat <<- RC
-      # CHPATH
-      alias chpath="source chpath"
-      export ORIGINAL_PATH="\$PATH"
-      export PATH="\$(cat "\$HOME/.path" | cut -d '+' -f1)\${ORIGINAL_PATH}\$(cat "\$HOME/.path" | cut -d '+' -f2)"
+# CHPATH
+alias chpath="source chpath"
+[[ -z "\$ORIGINAL_PATH" ]] && export ORIGINAL_PATH="\$PATH"
+export PATH="\$(cat "\$HOME/.path" | cut -d+ -f1)\${ORIGINAL_PATH}\$(cat "\$HOME/.path" | cut -d+ -f2)"
 RC
   )"
   [[ ! "$(cat "$HOME"/.bashrc)" =~ "# CHPATH" ]] && echo "$rc" >> "$HOME"/.bashrc
