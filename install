@@ -3,7 +3,7 @@
 # chpath's installer
 install() {
   local repo="$(find "$HOME" -type d -name chpath 2>/dev/null | grep repo)"
-  [[ "$1" == "--sys" ]] && { sudo cp -f "$repo/chpath" "/usr/local/bin" || return 1; } || { cp "$repo"/chpath "$HOME/bin" || return 1; }
+  cp "$repo"/chpath "$HOME/bin" || return 1
   [[ ! "$(cat "$HOME"/.bashrc)" =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc
   # RC Check
   local rc="$(cat <<- RC
@@ -12,10 +12,10 @@ alias chpath="source chpath"
 [[ -z "\$ORIGINAL_PATH" ]] && export ORIGINAL_PATH="\$PATH"
 export PATH="\$(cat "\$HOME/.path" | cut -d+ -f1)\${ORIGINAL_PATH}\$(cat "\$HOME/.path" | cut -d+ -f2)"
 RC
-  )"
+)"
   [[ ! "$(cat "$HOME"/.bashrc)" =~ "# CHPATH" ]] && echo "$rc" >> "$HOME"/.bashrc
   # Attempt to add completion to system, otherwise default to ~/.d/.c/
-  [[ "$1" == "--sys" ]] && { [[ -e "/etc/bash_completion.d/chpath-comp.sh" ]] || cp -f "$repo/chpath-comp" "/etc/bash_completion.d/chpath-comp.sh"; } || { [[ -e "$HOME/.d/chpath-comp" ]] || cp -f "$repo/chpath-comp" "$HOME/.d/chpath-comp"; }
+  cp -f "$repo/chpath-comp" "$HOME/.d/chpath-comp"
 }
 
 install "$@"
