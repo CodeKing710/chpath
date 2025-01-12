@@ -2,7 +2,11 @@
 
 # chpath's installer
 install() {
-  local repo="$(find "$HOME" -type d -name chpath 2>/dev/null | grep repo)"
+  if [[ -e "$HOME/repos/chpath" ]]; then
+		local repo="$HOME/repos/chpath"
+	else
+		local repo="$(find "$HOME" -type d -name chpath 2>/dev/null)"
+	fi
   cp "$repo"/chpath "$HOME/bin" || return 1
   [[ ! "$(cat "$HOME"/.bashrc)" =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc
   # RC Check
