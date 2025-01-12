@@ -168,9 +168,9 @@ __edit() {
 # chpath's main code
 
 if [[ -e "$HOME/repos/chpath" ]]; then
-		local repo="$HOME/repos/chpath"
+		repo="$HOME/repos/chpath"
 	else
-		local repo="$(find "$HOME" -type d -name chpath 2>/dev/null)"
+		repo="$(find "$HOME" -type d -name chpath 2>/dev/null)"
 	fi
 
 [[ -n "$(diff "$repo/chpath" "$HOME/bin/chpath")" ]] && "$repo/install"
