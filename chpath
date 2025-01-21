@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-version="chpath - v1.1.0"
+version="chpath - v1.2.0"
 help=$(cat <<-HELP
 Usage: chpath <list|add|remove|edit> [paths ...]
 
