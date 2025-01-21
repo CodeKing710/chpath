@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
 version="chpath - v1.1.0"
-help=`cat <<-HELP
+help=$(cat <<-HELP
 Usage: chpath <list|add|remove|edit> [paths ...]
 
 Options:
-    All options except list will require a reload of the terminal environment. This can be done by the alias 'reload' that the program writes to the bashrc file, or you can run \\\`source ~/.bashrc\\\` to reload the terminal
+    All options except list will require a reload of the terminal environment. This can be done by the alias 'reload' that the program writes to the bashrc file, or you can run \`source ~/.bashrc\` to reload the terminal
 
     list      Lists current paths in a readable format
 
@@ -22,7 +22,7 @@ Options:
 
     save      Saves the current path structure as the original
 HELP
-`
+)
 
 # chpath's Functions and Variables
 
@@ -45,7 +45,7 @@ __args() {
       add | -a | --add )
         shift
         verbose "Args passed to __add(): $@"
-        if [[ ! -z "$1" ]]; then
+        if [ ! -z "$1" ]; then
           __add "$@"
         else
           echo "Required argument: PATH"
@@ -54,7 +54,7 @@ __args() {
       remove | -r | --remove )
         shift
         verbose "Args passed to __remove(): $@"
-        if [[ ! -z "$1" ]]; then
+        if [ ! -z "$1" ]; then
           __remove "$@"
         else
           echo "Required argument: PATH"
@@ -63,7 +63,7 @@ __args() {
       edit | -e | --edit )
         shift
         verbose "Args passed to __edit(): $@"
-        if [[ ! -z "$1" ]]; then
+        if [ ! -z "$1" ]; then
           __edit "$@"
         else
           echo "Required argument: PATH"
@@ -88,7 +88,8 @@ __args() {
       --usage )
         echo "$help" | head -1
         return;;
-      * ) # Catch-all
+      * )
+        # Catch-all
         echo "$help" | head -1
         error "\"$1\" is not an argument!"
         return;;
@@ -97,14 +98,15 @@ __args() {
 }
 
 error() { printf '\e[0;1;31m[ERROR]\e[0;0;0m '"${1}\n" >&2; }
-verbose() { [[ -n "$DEV" ]] && printf '\e[0;1;95m[VERBOSE]\e[0;0;0m '"${1}\n"; }
+verbose() { [ -n "$DEV" ] && printf '\e[0;1;95m[VERBOSE]\e[0;0;0m '"${1}\n"; }
 log() { printf '\e[0;1;36m[CHPATH]\e[0;0;0m '"${1}\n"; }
-__list() { echo -e "${PATH//:/\\n}"; }
+__list() { printf "$(echo "$PATH" | tr ':' '\n')\n"; }
 __reset() { cat "$HOME"/.pathog > "$HOME/.path" && log "Path reset!"; }
 __save() { cat "$HOME"/.path > "$HOME/.pathog" && log "Path saved!"; }
+
 __add() {
   changed=true
-  while [[ -n "$1" ]]; do
+  while [ -n "$1" ]; do
     case "$1" in
       -b | --before )
         shift;
@@ -121,42 +123,45 @@ __add() {
   shift; done
   verbose "Path file update: ${__tmppre}+${__tmppost}"
 }
+
 __remove() {
   changed=true
-  while [[ -n "$1" ]]; do
-    if [[ "$__tmppre" =~ "$1" ]]; then
-      __tmppre="${__tmppre//$1/}" && changed=true
+  while [ -n "$1" ]; do
+    if echo "$__tmppre" | grep -q "$1"; then
+      __tmppre="$(echo "$__tmppre" | sed 's/$1//')"
       verbose "Prepath list: Removed '$1' - $__tmppre"
     elif [[ "$__tmppost" =~ "$1" ]]; then
-      __tmppost="${__tmppost//$1/}" && changed=true
+      __tmppost="$(echo "$__tmppost" | sed 's/$1//')"
       verbose "Postpath list: Removed '$1' - $__tmppost"
     else
       error "Failed to remove ${1}! Path doesn't exist in list!"
     fi
     # Catch special empty case
-    if [[ "$__tmppre" == ":" ]]; then
+    if [ "$__tmppre" = ":" ]; then
       verbose "Empty Prepath list"
-      __tmppre="${__tmppre//:/}"
+      __tmppre="$(echo "$__tmppre" | sed 's/://')"
     fi
-    if [[ "$__tmppost" == ":" ]]; then
+    if [ "$__tmppost" = ":" ]; then
       verbose "Empty Postpath list"
-      __tmppost="${__tmppost//:/}"
+      __tmppost="$(echo "$__tmppost" | sed 's/://')"
     fi
   shift; done
 }
+
 __edit() {
-  while [[ -n "$1" ]]; do
+  changed=true
+  while [ -n "$1" ]; do
     local og="$1"; shift
     local nu="$1"
     
     verbose "Editing $og to $nu"
 
     # sed -i "s;$og;$nu;" "$HOME/.path" && changed=true || echo "Failed to edit $og to $nu!"
-    if [[ $__tmppre =~ "$og" ]]; then
-      __tmppre="${__tmppre//$og/$nu}" && changed=true
+    if echo "$__tmppre" | grep -q "$og"; then
+      __tmppre="$(echo "$__tmppre" | sed 's/$og/$nu/')"
       verbose "Prepath list: '$og' is now '$nu' - $__tmppre"
-    elif [[ $__tmppost =~ "$og" ]]; then
-      __tmppost="${__tmppost//$og/$nu}" && changed=true
+    elif echo "$__tmppost" | grep -q "$og"; then
+      __tmppost="$(echo "$__tmppost" | sed 's/$og/$nu/')"
       verbose "Postpath list: '$og' is now '$nu' - $__tmppost"
     else
       error "Failed to edit $og to $nu! Path doesn't exist in list!"
@@ -167,17 +172,21 @@ __edit() {
 
 # chpath's main code
 
-if [[ -e "$HOME/repos/chpath" ]]; then
+if [ -e "$HOME/repos/chpath" ]; then
 		repo="$HOME/repos/chpath"
 	else
 		repo="$(find "$HOME" -type d -name chpath 2>/dev/null)"
 	fi
 
-[[ -n "$(diff "$repo/chpath" "$HOME/bin/chpath")" ]] && "$repo/install"
+[ -n "$(diff "$repo/chpath" "$HOME/bin/chpath")" ] && . "$repo/install"
 
 __chpath() {
   # Run args
-  [ -z "$1" ] && __args --usage || __args "$@"
+  if [ -z "$1" ]; then
+    __args --usage
+  else
+    __args "$@"
+  fi
 
   # Save users original path
   if [ ! -e "$HOME/.pathog" ]; then
@@ -192,12 +201,12 @@ __chpath() {
   fi
 
   # Arg will set state of __chg to true to update the path file only when needed
-  if [[ -n "$changed" ]]; then
-    echo -e "${__tmppre}+${__tmppost}" > "$HOME/.path" && verbose "Path file written"
+  if [ -n "$changed" ]; then
+    printf "${__tmppre}+${__tmppost}" > "$HOME/.path" && verbose "Path file written"
   fi
 
   # This will work with the program being force sourced
-  source "$HOME/.bashrc"
+  . "$HOME/.bashrc"
 }
 
 __chpath "$@"

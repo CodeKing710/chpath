@@ -2,24 +2,26 @@
 
 # chpath's installer
 install() {
-  if [[ -e "$HOME/repos/chpath" ]]; then
-		local repo="$HOME/repos/chpath"
+  if [ -e "$HOME/repos/chpath" ]; then
+		repo="$HOME/repos/chpath"
 	else
-		local repo="$(find "$HOME" -type d -name chpath 2>/dev/null)"
+		repo="$(find "$HOME" -type d -name chpath 2>/dev/null)"
 	fi
   cp "$repo"/chpath "$HOME/bin" || return 1
-  [[ ! "$(cat "$HOME"/.bashrc)" =~ "# RELOAD ALIAS" ]] && echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc
+  if ! grep -q "# RELOAD ALIAS" "$HOME/.bashrc"; then echo -e "# RELOAD ALIAS\nalias reload=\"source ~/.bashrc\"" >> "$HOME"/.bashrc; fi
   # RC Check
-  local rc="$(cat <<- RC
+  rc="$(cat <<- RC
 # CHPATH
 alias chpath="source chpath"
-[[ -z "\$ORIGINAL_PATH" ]] && export ORIGINAL_PATH="\$PATH"
+[ -z "\$ORIGINAL_PATH" ] && export ORIGINAL_PATH="\$PATH"
 export PATH="\$(cat "\$HOME/.path" | cut -d+ -f1)\${ORIGINAL_PATH}\$(cat "\$HOME/.path" | cut -d+ -f2)"
 RC
 )"
-  [[ ! "$(cat "$HOME"/.bashrc)" =~ "# CHPATH" ]] && echo "$rc" >> "$HOME"/.bashrc
-  # Attempt to add completion to system, otherwise default to ~/.d/.c/
-  cp -f "$repo/chpath-comp" "$HOME/.d/chpath-comp"
+  if ! grep -q "# CHPATH" "$HOME/.bashrc"; then echo "$rc" >> "$HOME"/.bashrc; fi
+  # Add completion code to folder .bash_completion.d, create if it doesn't exist
+  [ ! -d "$HOME/.bash_completion.d" ] && mkdir -p "$HOME/.bash_completion.d"
+  cp -f "$repo/chpath-comp" "$HOME/.bash_completion.d/chpath-comp"
 }
 
 install "$@"
+unset repo rc
