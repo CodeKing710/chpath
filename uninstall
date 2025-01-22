@@ -1,4 +1,4 @@
-#/usr/bin/env bash
+#!/usr/bin/env bash
 
 # Grab the repo path just in case
 repo="$(grep 'repo_path' "$HOME/.chpath/app.cfg" | cut -d= -f2)"
