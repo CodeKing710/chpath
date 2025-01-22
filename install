@@ -21,6 +21,7 @@ RC
   # Add completion code to folder .bash_completion.d, create if it doesn't exist
   [ ! -d "$HOME/.bash_completion.d" ] && mkdir -p "$HOME/.bash_completion.d"
   cp -f "$repo/chpath-comp" "$HOME/.bash_completion.d/chpath-comp"
+  echo "chpath installed"
 }
 
 install "$@"
